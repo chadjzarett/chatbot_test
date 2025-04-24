@@ -69,6 +69,11 @@ export function ChatWindow() {
     await addWelcomeMessage()
   }, [originalClearCurrentSession, addWelcomeMessage])
 
+  const cleanMessageContent = useCallback((content: string) => {
+    // Remove any markdown code blocks
+    return content.replace(/```[\s\S]*?```/g, '').trim()
+  }, [])
+
   const handleSendMessage = useCallback(async (content: string) => {
     if (!currentSession) {
       startNewSession()
@@ -190,7 +195,7 @@ export function ChatWindow() {
     } finally {
       setIsLoading(false)
     }
-  }, [currentSession, startNewSession, messages, generateUniqueId, isXumoPlayIssue, troubleshootingAttempted])
+  }, [currentSession, startNewSession, messages, generateUniqueId, isXumoPlayIssue, troubleshootingAttempted, cleanMessageContent])
 
   const handleTicketCreated = useCallback((ticketId: string) => {
     setShowTicketForm(false)
@@ -230,10 +235,6 @@ export function ChatWindow() {
   useEffect(() => {
     scrollToBottom()
   }, [messages, isLoading, scrollToBottom])
-
-  const cleanMessageContent = useCallback((content: string): string => {
-    return content.replace(/【\d+:\d+†[^】]+】/g, '').trim()
-  }, [])
 
   return (
     <div className="flex h-[600px] w-full max-w-3xl flex-col rounded-xl border border-gray-100 bg-white shadow-lg">
