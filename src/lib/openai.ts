@@ -1,5 +1,4 @@
-import OpenAI from 'openai';
-import { retry } from './utils/retry';
+import { OpenAI } from "openai"
 
 // Custom error class for OpenAI-related errors
 export interface OpenAIError {
@@ -8,11 +7,6 @@ export interface OpenAIError {
   code?: string;
   status?: number;
 }
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  organization: process.env.OPENAI_ORGANIZATION_ID,
-});
 
 export interface OpenAIResponse {
   message: string;
@@ -39,25 +33,48 @@ export async function createThread(): Promise<string> {
   }
 }
 
-export async function sendMessage(message: string, threadId: string): Promise<OpenAIResponse> {
+export async function sendMessage(message: string, threadId?: string): Promise<OpenAIResponse> {
+  const client = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  })
+
   try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message, threadId }),
-    });
-    
-    if (!response.ok) {
-      const error: OpenAIError = await response.json();
-      throw new Error(error.message);
+    if (!threadId) {
+      const thread = await client.beta.threads.create()
+      threadId = thread.id
     }
+
+    await client.beta.threads.messages.create(threadId, {
+      role: "user",
+      content: message,
+    })
+
+    const run = await client.beta.threads.runs.create(threadId, {
+      assistant_id: process.env.OPENAI_ASSISTANT_ID!,
+    })
+
+    let runStatus = await client.beta.threads.runs.retrieve(threadId, run.id)
+
+    while (runStatus.status !== "completed") {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      runStatus = await client.beta.threads.runs.retrieve(threadId, run.id)
+    }
+
+    const messages = await client.beta.threads.messages.list(threadId)
+    const lastMessage = messages.data[0]
     
-    return await response.json();
-  } catch (error: unknown) {
-    console.error("Error sending message:", error);
-    throw error instanceof Error ? error : new Error("Failed to send message");
+    if (!lastMessage.content[0] || !('text' in lastMessage.content[0])) {
+      throw new Error('Invalid message format received from OpenAI')
+    }
+
+    return {
+      message: lastMessage.content[0].text.value,
+      threadId,
+      timestamp: new Date().toISOString(),
+    }
+  } catch (error) {
+    console.error("Error in sendMessage:", error)
+    throw error
   }
 }
 

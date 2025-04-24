@@ -5,7 +5,6 @@ import { ChatMessage } from "./ChatMessage"
 import { ChatInput } from "./ChatInput"
 import { MessageLoading } from "./MessageLoading"
 import { useChatSession } from "@/contexts/ChatSessionContext"
-import { useSupportTicket } from "@/contexts/SupportTicketContext"
 import { Button } from "@/components/ui/button"
 import { Plus, Trash2 } from "lucide-react"
 import { TicketForm } from "./TicketForm"
@@ -19,7 +18,6 @@ interface Message {
 
 export function ChatWindow() {
   const { currentSession, startNewSession: originalStartNewSession, clearCurrentSession: originalClearCurrentSession } = useChatSession()
-  const { createTicket } = useSupportTicket()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showTicketForm, setShowTicketForm] = useState(false)
