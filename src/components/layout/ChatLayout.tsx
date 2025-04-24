@@ -1,6 +1,7 @@
 "use client"
 
 import { ChatWindow } from "../chat/ChatWindow"
+import Image from "next/image"
 
 export function ChatLayout() {
   return (
@@ -8,10 +9,11 @@ export function ChatLayout() {
       <header className="border-b border-neutral-200 bg-white px-4 py-3 shadow-sm">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <div className="flex items-center">
-            <img 
+            <Image 
               src="/logo.png" 
               alt="XUMO" 
-              className="h-8"
+              width={32}
+              height={32}
             />
           </div>
         </div>
@@ -24,7 +26,7 @@ export function ChatLayout() {
               How can I help you today?
             </h2>
             <p className="mt-2 text-sm text-neutral-500">
-              Ask me anything about Xumo Play, and I'll do my best to assist you.
+              Ask me anything about Xumo Play, and I&apos;ll do my best to assist you.
             </p>
           </div>
 

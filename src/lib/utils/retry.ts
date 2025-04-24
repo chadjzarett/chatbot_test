@@ -6,37 +6,16 @@ interface RetryOptions {
 
 export async function retry<T>(
   fn: () => Promise<T>,
-  options: RetryOptions = {}
+  retries = 3,
+  delay = 1000
 ): Promise<T> {
-  const {
-    maxAttempts = 3,
-    delay = 1000,
-    backoff = 2,
-  } = options;
-
-  let lastError: Error;
-  
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      return await fn();
-    } catch (error: any) {
-      lastError = error;
-      
-      // Don't retry if it's a client error (4xx)
-      if (error.status >= 400 && error.status < 500) {
-        throw error;
-      }
-
-      // Don't retry on the last attempt
-      if (attempt === maxAttempts) {
-        throw error;
-      }
-
-      // Wait before retrying, with exponential backoff
-      const waitTime = delay * Math.pow(backoff, attempt - 1);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+  try {
+    return await fn();
+  } catch (error: unknown) {
+    if (retries === 0) {
+      throw error instanceof Error ? error : new Error("Failed after retries");
     }
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    return retry(fn, retries - 1, delay * 2);
   }
-
-  throw lastError!;
 } 

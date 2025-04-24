@@ -202,9 +202,9 @@ export function ChatWindow() {
           data.message.toLowerCase().includes("check")) {
         setTroubleshootingAttempted(true)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error sending message:", error);
-      setError(error.message || "An error occurred. Please try again.");
+      setError(error instanceof Error ? error.message : "An error occurred. Please try again.");
     } finally {
       setIsLoading(false)
     }
@@ -235,7 +235,7 @@ export function ChatWindow() {
         addWelcomeMessage()
       }
     }
-  }, [isInitialized])
+  }, [isInitialized, currentSession, startNewSession, addWelcomeMessage])
 
   return (
     <div className="flex h-[600px] w-full max-w-3xl flex-col rounded-xl border border-gray-100 bg-white shadow-lg">

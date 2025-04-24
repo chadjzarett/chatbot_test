@@ -18,15 +18,56 @@ const openai = new OpenAI({
   organization: process.env.OPENAI_ORGANIZATION_ID,
 });
 
-export async function createThread() {
+export interface OpenAIError {
+  message: string;
+  type: string;
+  code?: string;
+}
+
+export interface OpenAIResponse {
+  message: string;
+  threadId: string;
+  timestamp: string;
+}
+
+export async function createThread(): Promise<string> {
   try {
-    return await retry(() => openai.beta.threads.create());
-  } catch (error: any) {
-    throw new OpenAIError(
-      'Failed to create thread',
-      error.status,
-      error.code
-    );
+    const response = await fetch("/api/thread", {
+      method: "POST",
+    });
+    
+    if (!response.ok) {
+      const error: OpenAIError = await response.json();
+      throw new Error(error.message);
+    }
+    
+    const data: { threadId: string } = await response.json();
+    return data.threadId;
+  } catch (error: unknown) {
+    console.error("Error creating thread:", error);
+    throw error instanceof Error ? error : new Error("Failed to create thread");
+  }
+}
+
+export async function sendMessage(message: string, threadId: string): Promise<OpenAIResponse> {
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message, threadId }),
+    });
+    
+    if (!response.ok) {
+      const error: OpenAIError = await response.json();
+      throw new Error(error.message);
+    }
+    
+    return await response.json();
+  } catch (error: unknown) {
+    console.error("Error sending message:", error);
+    throw error instanceof Error ? error : new Error("Failed to send message");
   }
 }
 

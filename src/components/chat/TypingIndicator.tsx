@@ -1,7 +1,5 @@
 "use client"
 
-import { cn } from "@/lib/utils"
-
 export function TypingIndicator() {
   return (
     <div className="flex w-full gap-3 px-4 py-3">
