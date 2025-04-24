@@ -68,8 +68,15 @@ export function ChatWindow() {
   }, [originalClearCurrentSession, addWelcomeMessage])
 
   const cleanMessageContent = useCallback((content: string) => {
+    // Remove source markers like 【6:0†Xumo Play KB.docx】
+    content = content.replace(/【\d+:\d+†[^】]+】/g, '')
     // Remove any markdown code blocks
-    return content.replace(/```[\s\S]*?```/g, '').trim()
+    content = content.replace(/```[\s\S]*?```/g, '')
+    // Remove any remaining markdown formatting
+    content = content.replace(/\*\*([^*]+)\*\*/g, '$1') // bold
+    content = content.replace(/\*([^*]+)\*/g, '$1') // italic
+    content = content.replace(/`([^`]+)`/g, '$1') // inline code
+    return content.trim()
   }, [])
 
   const handleSendMessage = useCallback(async (content: string) => {
@@ -116,11 +123,12 @@ export function ChatWindow() {
       }
 
       // Check if this is a non-Xumo Play issue
-      const isNonXumoPlayIssue = data.message.toLowerCase().includes("peacock") || 
+      const isNonXumoPlayIssue = (data.message.toLowerCase().includes("peacock") || 
                                 data.message.toLowerCase().includes("max") ||
                                 data.message.toLowerCase().includes("fox news") ||
                                 data.message.toLowerCase().includes("subscription") ||
-                                data.message.toLowerCase().includes("account login");
+                                data.message.toLowerCase().includes("account login")) &&
+                                !data.message.toLowerCase().includes("xumo play");
 
       let assistantMessage: Message;
       
