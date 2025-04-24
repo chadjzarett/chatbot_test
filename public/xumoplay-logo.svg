@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="160" height="40" viewBox="0 0 160 40" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g>
+        <!-- Small triangles -->
+        <path d="M0,12 L10,12 L5,32 L0,12" fill="#E6007E"/>
+        <path d="M5,32 L10,12 L15,32 L5,32" fill="#00B9B4"/>
+        <!-- XUMO text -->
+        <text x="18" y="32" font-family="Arial Black, sans-serif" font-weight="900" font-size="32" fill="#000000">XUMO</text>
+    </g>
+</svg> 
