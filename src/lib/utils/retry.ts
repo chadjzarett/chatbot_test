@@ -1,9 +1,3 @@
-interface RetryOptions {
-  maxAttempts?: number;
-  delay?: number;
-  backoff?: number;
-}
-
 export async function retry<T>(
   fn: () => Promise<T>,
   retries = 3,

@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils"
 
 // This interface is intentionally empty as it extends HTMLInputElement
 // and we want to maintain type safety while allowing all input props
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(

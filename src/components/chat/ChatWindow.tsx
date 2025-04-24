@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { ChatMessage } from "./ChatMessage"
 import { ChatInput } from "./ChatInput"
 import { MessageLoading } from "./MessageLoading"
@@ -30,32 +30,16 @@ export function ChatWindow() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messageCounter = useRef(0)
 
-  const generateUniqueId = () => {
+  const generateUniqueId = useCallback(() => {
     messageCounter.current += 1
     return `${Date.now()}-${messageCounter.current}`
-  }
+  }, [])
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+  }, [])
 
-  useEffect(() => {
-    if (currentSession) {
-      setMessages(currentSession.messages)
-    } else {
-      setMessages([])
-    }
-  }, [currentSession])
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages, isLoading])
-
-  const cleanMessageContent = (content: string): string => {
-    return content.replace(/【\d+:\d+†[^】]+】/g, '').trim()
-  }
-
-  const addWelcomeMessage = async () => {
+  const addWelcomeMessage = useCallback(async () => {
     setIsLoading(true)
     
     // Simulate typing delay
@@ -73,21 +57,19 @@ export function ChatWindow() {
     }
     
     setIsLoading(false)
-  }
+  }, [currentSession, generateUniqueId])
 
-  // Initialize new chat with welcome message
-  const startNewSession = async () => {
+  const startNewSession = useCallback(async () => {
     originalStartNewSession()
     await addWelcomeMessage()
-  }
+  }, [originalStartNewSession, addWelcomeMessage])
 
-  // Clear chat and add welcome message
-  const clearCurrentSession = async () => {
+  const clearCurrentSession = useCallback(async () => {
     originalClearCurrentSession()
     await addWelcomeMessage()
-  }
+  }, [originalClearCurrentSession, addWelcomeMessage])
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = useCallback(async (content: string) => {
     if (!currentSession) {
       startNewSession()
       return
@@ -208,9 +190,9 @@ export function ChatWindow() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [currentSession, startNewSession, messages, generateUniqueId, isXumoPlayIssue, troubleshootingAttempted])
 
-  const handleTicketCreated = (ticketId: string) => {
+  const handleTicketCreated = useCallback((ticketId: string) => {
     setShowTicketForm(false)
     if (currentSession) {
       const ticketMessage: Message = {
@@ -223,7 +205,7 @@ export function ChatWindow() {
       currentSession.messages = newMessages
       setMessages(newMessages)
     }
-  }
+  }, [currentSession, messages, generateUniqueId])
 
   // Initialize chat on first load
   useEffect(() => {
@@ -236,6 +218,22 @@ export function ChatWindow() {
       }
     }
   }, [isInitialized, currentSession, startNewSession, addWelcomeMessage])
+
+  useEffect(() => {
+    if (currentSession) {
+      setMessages(currentSession.messages)
+    } else {
+      setMessages([])
+    }
+  }, [currentSession])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, isLoading, scrollToBottom])
+
+  const cleanMessageContent = useCallback((content: string): string => {
+    return content.replace(/【\d+:\d+†[^】]+】/g, '').trim()
+  }, [])
 
   return (
     <div className="flex h-[600px] w-full max-w-3xl flex-col rounded-xl border border-gray-100 bg-white shadow-lg">

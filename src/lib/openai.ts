@@ -2,27 +2,17 @@ import OpenAI from 'openai';
 import { retry } from './utils/retry';
 
 // Custom error class for OpenAI-related errors
-export class OpenAIError extends Error {
-  constructor(
-    message: string,
-    public status?: number,
-    public code?: string
-  ) {
-    super(message);
-    this.name = 'OpenAIError';
-  }
+export interface OpenAIError {
+  message: string;
+  type: string;
+  code?: string;
+  status?: number;
 }
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   organization: process.env.OPENAI_ORGANIZATION_ID,
 });
-
-export interface OpenAIError {
-  message: string;
-  type: string;
-  code?: string;
-}
 
 export interface OpenAIResponse {
   message: string;
@@ -71,80 +61,68 @@ export async function sendMessage(message: string, threadId: string): Promise<Op
   }
 }
 
-export async function createMessage(threadId: string, content: string) {
+export async function createMessage(threadId: string, content: string): Promise<void> {
   try {
-    return await retry(() =>
-      openai.beta.threads.messages.create(threadId, {
-        role: "user",
-        content: content,
-      })
-    );
-  } catch (error: any) {
-    throw new OpenAIError(
-      'Failed to create message',
-      error.status,
-      error.code
-    );
+    await fetch("/api/message", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ threadId, content }),
+    });
+  } catch (error: unknown) {
+    console.error("Error creating message:", error);
+    throw error instanceof Error ? error : new Error("Failed to create message");
   }
 }
 
-export async function runAssistant(threadId: string) {
+export async function runAssistant(threadId: string): Promise<void> {
   try {
-    const assistantId = process.env.OPENAI_ASSISTANT_ID;
-    if (!assistantId) {
-      throw new OpenAIError('Assistant ID is not configured', 500);
-    }
-
-    return await retry(() =>
-      openai.beta.threads.runs.create(threadId, {
-        assistant_id: assistantId,
-      })
-    );
-  } catch (error: any) {
-    throw new OpenAIError(
-      'Failed to run assistant',
-      error.status,
-      error.code
-    );
+    await fetch("/api/run", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ threadId }),
+    });
+  } catch (error: unknown) {
+    console.error("Error running assistant:", error);
+    throw error instanceof Error ? error : new Error("Failed to run assistant");
   }
 }
 
-export async function getRunStatus(threadId: string, runId: string) {
+export async function getRunStatus(threadId: string, runId: string): Promise<{ status: string }> {
   try {
-    return await retry(() =>
-      openai.beta.threads.runs.retrieve(threadId, runId)
-    );
-  } catch (error: any) {
-    throw new OpenAIError(
-      'Failed to get run status',
-      error.status,
-      error.code
-    );
+    const response = await fetch(`/api/run/${threadId}/${runId}`);
+    return await response.json();
+  } catch (error: unknown) {
+    console.error("Error getting run status:", error);
+    throw error instanceof Error ? error : new Error("Failed to get run status");
   }
 }
 
-export async function getMessages(threadId: string) {
+export async function getMessages(threadId: string): Promise<{ messages: Array<{ content: string }> }> {
   try {
-    return await retry(() =>
-      openai.beta.threads.messages.list(threadId)
-    ).then(response => response.data);
-  } catch (error: any) {
-    throw new OpenAIError(
-      'Failed to get messages',
-      error.status,
-      error.code
-    );
+    const response = await fetch(`/api/messages/${threadId}`);
+    return await response.json();
+  } catch (error: unknown) {
+    console.error("Error getting messages:", error);
+    throw error instanceof Error ? error : new Error("Failed to get messages");
   }
 }
 
-export async function waitForRunCompletion(threadId: string, runId: string, maxAttempts = 30) {
+export async function waitForRunCompletion(
+  threadId: string,
+  runId: string,
+  maxAttempts = 30
+): Promise<{ messages: Array<{ content: string }> }> {
   try {
     let attempts = 0;
     let run = await getRunStatus(threadId, runId);
     
     while (run.status === "queued" || run.status === "in_progress") {
       if (attempts >= maxAttempts) {
-        throw new OpenAIError('Run timed out', 408);
+        throw new Error("Run timed out");
       }
       
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -155,20 +133,14 @@ export async function waitForRunCompletion(threadId: string, runId: string, maxA
     if (run.status === "completed") {
       return await getMessages(threadId);
     } else if (run.status === "failed") {
-      throw new OpenAIError(`Run failed: ${run.last_error?.message || 'Unknown error'}`, 500);
+      throw new Error(`Run failed: ${run.status}`);
     } else if (run.status === "cancelled") {
-      throw new OpenAIError('Run was cancelled', 500);
+      throw new Error("Run was cancelled");
     } else {
-      throw new OpenAIError(`Unexpected run status: ${run.status}`, 500);
+      throw new Error(`Unexpected run status: ${run.status}`);
     }
-  } catch (error: any) {
-    if (error instanceof OpenAIError) {
-      throw error;
-    }
-    throw new OpenAIError(
-      'Failed to wait for run completion',
-      error.status,
-      error.code
-    );
+  } catch (error: unknown) {
+    console.error("Error waiting for run completion:", error);
+    throw error instanceof Error ? error : new Error("Failed to wait for run completion");
   }
 } 
