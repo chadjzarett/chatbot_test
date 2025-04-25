@@ -20,13 +20,13 @@ export function ChatMessage({ content, role, timestamp }: ChatMessageProps) {
     >
       {role === "assistant" && (
         <div className="flex flex-col items-center gap-1">
-          <div className="flex h-12 w-12 shrink-0 select-none items-center justify-center rounded-full bg-white p-1">
+          <div className="flex h-12 w-12 shrink-0 select-none items-center justify-center rounded-full bg-neutral-100 p-1 shadow-sm">
             <Image
               src="/logo.png"
               alt="Xumo Assistant"
-              width={32}
-              height={32}
-              className="object-contain"
+              width={40}
+              height={40}
+              className="rounded-full object-contain"
             />
           </div>
           <span className="text-xs font-medium text-gray-500">Xumo Assistant</span>

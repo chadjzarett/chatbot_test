@@ -6,14 +6,14 @@ import Image from "next/image"
 export function ChatLayout() {
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50">
-      <header className="border-b border-neutral-200 bg-white px-4 py-3 shadow-sm">
+      <header className="sticky top-0 z-50 border-b border-neutral-200 bg-white px-4 py-3 shadow-sm">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <div className="flex items-center">
             <Image 
               src="/logo.png" 
               alt="XUMO" 
-              width={32}
-              height={32}
+              width={80}
+              height={80}
             />
           </div>
         </div>
