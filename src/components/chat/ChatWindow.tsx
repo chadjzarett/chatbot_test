@@ -169,7 +169,7 @@ export function ChatWindow() {
         };
       } else {
         // For Xumo Play issues, use the assistant's response
-        let messageContent = cleanMessageContent(data.message);
+        const messageContent = cleanMessageContent(data.message);
         
         assistantMessage = {
           id: generateUniqueId(),
