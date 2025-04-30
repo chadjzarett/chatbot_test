@@ -7,7 +7,6 @@ import { MessageLoading } from "./MessageLoading"
 import { useChatSession } from "@/contexts/ChatSessionContext"
 import { Button } from "@/components/ui/button"
 import { Plus, Trash2 } from "lucide-react"
-import { TicketForm } from "./TicketForm"
 
 interface Message {
   id: string
@@ -20,9 +19,6 @@ export function ChatWindow() {
   const { currentSession, startNewSession: originalStartNewSession, clearCurrentSession: originalClearCurrentSession } = useChatSession()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showTicketForm, setShowTicketForm] = useState(false)
-  const [isXumoPlayIssue, setIsXumoPlayIssue] = useState(false)
-  const [troubleshootingAttempted, setTroubleshootingAttempted] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [isInitialized, setIsInitialized] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -46,7 +42,7 @@ export function ChatWindow() {
     if (currentSession) {
       const welcomeMessage: Message = {
         id: generateUniqueId(),
-        content: "Welcome to Xumo Play Support\nI'm here to help you with any questions about Xumo Play. How can I assist you today?",
+        content: "Welcome to Xumo Support\nI'm here to help you with any questions about Xumo. What are you having issues with?",
         role: "assistant",
         timestamp: new Date().toLocaleTimeString(),
       }
@@ -78,6 +74,37 @@ export function ChatWindow() {
     content = content.replace(/`([^`]+)`/g, '$1') // inline code
     return content.trim()
   }, [])
+
+  const handleDeviceSelection = useCallback(async (device: string) => {
+    setIsLoading(true)
+    
+    // Simulate typing delay
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    if (currentSession) {
+      let responseMessage: string
+      if (device === "Xumo Play") {
+        responseMessage = "I'm sorry you're having issues with the Xumo Play app. How can I assist you?"
+      } else {
+        responseMessage = "I apologize, but I can only assist with Xumo Play app issues. For assistance with Xumo Stream Box or Xumo TV, please visit xumo.com/support."
+      }
+      
+      const deviceResponse: Message = {
+        id: generateUniqueId(),
+        content: responseMessage,
+        role: "assistant",
+        timestamp: new Date().toLocaleTimeString(),
+      }
+      
+      // Simply append the new message to existing messages
+      setMessages(prev => [...prev, deviceResponse])
+      if (currentSession.messages) {
+        currentSession.messages = [...currentSession.messages, deviceResponse]
+      }
+    }
+    
+    setIsLoading(false)
+  }, [currentSession, generateUniqueId])
 
   const handleSendMessage = useCallback(async (content: string) => {
     if (!currentSession) {
@@ -141,24 +168,8 @@ export function ChatWindow() {
           timestamp: new Date().toLocaleTimeString(),
         };
       } else {
-        // For Xumo Play issues, use the assistant's response and add troubleshooting steps if needed
+        // For Xumo Play issues, use the assistant's response
         let messageContent = cleanMessageContent(data.message);
-        
-        // If the issue mentions streaming or playback problems
-        if (data.message.toLowerCase().includes("not working") || 
-            data.message.toLowerCase().includes("won't play") ||
-            data.message.toLowerCase().includes("loading") ||
-            data.message.toLowerCase().includes("buffering") ||
-            data.message.toLowerCase().includes("error")) {
-          
-          messageContent += "\n\nHere are some troubleshooting steps you can try:\n" +
-            "1. Check your internet connection\n" +
-            "2. Close and reopen the Xumo Play app\n" +
-            "3. Restart your device (Xumo Stream Box or TV)\n" +
-            "4. Clear the app cache if available on your device\n" +
-            "5. Make sure your device's software is up to date\n\n" +
-            "If these steps don't resolve the issue, I can help create a support ticket for further assistance.";
-        }
         
         assistantMessage = {
           id: generateUniqueId(),
@@ -176,47 +187,13 @@ export function ChatWindow() {
         currentSession.updatedAt = new Date().toISOString()
       }
 
-      // Check if the response indicates a need for a support ticket
-      if (data.message.toLowerCase().includes("ticket") || 
-          data.message.toLowerCase().includes("support") ||
-          data.message.toLowerCase().includes("escalate")) {
-        // Check if this is a Xumo Play issue and if troubleshooting has been attempted
-        if (isXumoPlayIssue && troubleshootingAttempted) {
-          setShowTicketForm(true)
-        }
-      }
-
-      // Update state based on the conversation
-      if (data.message.toLowerCase().includes("xumo play")) {
-        setIsXumoPlayIssue(true)
-      }
-      if (data.message.toLowerCase().includes("troubleshoot") || 
-          data.message.toLowerCase().includes("restart") ||
-          data.message.toLowerCase().includes("check")) {
-        setTroubleshootingAttempted(true)
-      }
     } catch (error: unknown) {
       console.error("Error sending message:", error);
       setError(error instanceof Error ? error.message : "An error occurred. Please try again.");
     } finally {
       setIsLoading(false)
     }
-  }, [currentSession, startNewSession, messages, generateUniqueId, isXumoPlayIssue, troubleshootingAttempted, cleanMessageContent])
-
-  const handleTicketCreated = useCallback((ticketId: string) => {
-    setShowTicketForm(false)
-    if (currentSession) {
-      const ticketMessage: Message = {
-        id: generateUniqueId(),
-        content: `Thank you for providing the information. Your support ticket has been created with ID: ${ticketId}. A support representative will contact you within 24-48 hours to help resolve your issue.`,
-        role: "assistant",
-        timestamp: new Date().toLocaleTimeString(),
-      }
-      const newMessages = [...messages, ticketMessage]
-      currentSession.messages = newMessages
-      setMessages(newMessages)
-    }
-  }, [currentSession, messages, generateUniqueId])
+  }, [currentSession, startNewSession, messages, generateUniqueId, cleanMessageContent])
 
   // Initialize chat on first load
   useEffect(() => {
@@ -224,11 +201,9 @@ export function ChatWindow() {
       setIsInitialized(true)
       if (!currentSession) {
         startNewSession()
-      } else if (currentSession.messages.length === 0) {
-        addWelcomeMessage()
       }
     }
-  }, [isInitialized, currentSession, startNewSession, addWelcomeMessage])
+  }, [isInitialized, currentSession, startNewSession])
 
   useEffect(() => {
     if (currentSession) {
@@ -295,14 +270,32 @@ export function ChatWindow() {
                 {error}
               </div>
             )}
-            {showTicketForm && (
-              <div className="px-6 py-4">
-                <TicketForm
-                  onTicketCreated={handleTicketCreated}
-                  onCancel={() => setShowTicketForm(false)}
-                  isXumoPlayIssue={isXumoPlayIssue}
-                  troubleshootingAttempted={troubleshootingAttempted}
-                />
+            {messages.length === 1 && messages[0].role === "assistant" && !isLoading && (
+              <div className="flex flex-wrap gap-3 px-6 py-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDeviceSelection("Xumo Stream Box")}
+                  className="rounded-full border-2 border-[#05B2B6] bg-gradient-to-r from-gray-50 to-white px-6 py-2 text-gray-800 shadow-md transition-all hover:scale-105 hover:shadow-lg hover:from-[#05B2B6]/10 hover:to-white"
+                >
+                  Xumo Stream Box
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDeviceSelection("Xumo TV")}
+                  className="rounded-full border-2 border-[#05B2B6] bg-gradient-to-r from-gray-50 to-white px-6 py-2 text-gray-800 shadow-md transition-all hover:scale-105 hover:shadow-lg hover:from-[#05B2B6]/10 hover:to-white"
+                >
+                  Xumo TV
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDeviceSelection("Xumo Play")}
+                  className="rounded-full border-2 border-[#05B2B6] bg-gradient-to-r from-gray-50 to-white px-6 py-2 text-gray-800 shadow-md transition-all hover:scale-105 hover:shadow-lg hover:from-[#05B2B6]/10 hover:to-white"
+                >
+                  Xumo Play
+                </Button>
               </div>
             )}
             <div ref={messagesEndRef} />
