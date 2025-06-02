@@ -2,7 +2,6 @@
 
 import { cn } from "@/lib/utils"
 import ReactMarkdown from "react-markdown"
-import Image from "next/image"
 
 interface ChatMessageProps {
   content: string
@@ -21,15 +20,11 @@ export function ChatMessage({ content, role, timestamp }: ChatMessageProps) {
       {role === "assistant" && (
         <div className="flex flex-col items-center gap-1">
           <div className="flex h-12 w-12 shrink-0 select-none items-center justify-center rounded-full bg-neutral-100 p-1 shadow-sm">
-            <Image
-              src="/logo.png"
-              alt="Xumo Assistant"
-              width={40}
-              height={40}
-              className="rounded-full object-contain"
-            />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white text-sm font-medium">
+              AI
+            </div>
           </div>
-          <span className="text-xs font-medium text-gray-500">Xumo Assistant</span>
+          <span className="text-xs font-medium text-gray-500">Assistant</span>
         </div>
       )}
       <div

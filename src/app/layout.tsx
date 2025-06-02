@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Xumo Play Chatbot",
-  description: "A customer service chatbot for Xumo Play",
+  title: "Customer Support Chatbot",
+  description: "AI-powered customer support assistant",
 };
 
 export default function RootLayout({

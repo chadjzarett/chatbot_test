@@ -42,7 +42,7 @@ export function ChatWindow() {
     if (currentSession) {
       const welcomeMessage: Message = {
         id: generateUniqueId(),
-        content: "Welcome to Xumo Support\nI'm here to help you with any questions about Xumo. What are you having issues with?",
+        content: "Welcome to Customer Support\nI'm here to help you with any questions about our services. What are you having issues with?",
         role: "assistant",
         timestamp: new Date().toLocaleTimeString(),
       }
@@ -83,10 +83,10 @@ export function ChatWindow() {
     
     if (currentSession) {
       let responseMessage: string
-      if (device === "Xumo Play") {
-        responseMessage = "I'm sorry you're having issues with the Xumo Play app. How can I assist you?"
+      if (device === "Service A") {
+        responseMessage = "I'm sorry you're having issues with Service A. How can I assist you?"
       } else {
-        responseMessage = "I apologize, but I can only assist with Xumo Play app issues. For assistance with Xumo Stream Box or Xumo TV, please visit xumo.com/support."
+        responseMessage = "I apologize, but I can only assist with Service A issues. For assistance with other services, please visit our main support page."
       }
       
       const deviceResponse: Message = {
@@ -149,26 +149,26 @@ export function ChatWindow() {
         currentSession.threadId = data.threadId;
       }
 
-      // Check if this is a non-Xumo Play issue
-      const isNonXumoPlayIssue = (data.message.toLowerCase().includes("peacock") || 
+      // Check if this is a non-Service A issue
+      const isNonServiceAIssue = (data.message.toLowerCase().includes("peacock") || 
                                 data.message.toLowerCase().includes("max") ||
                                 data.message.toLowerCase().includes("fox news") ||
                                 data.message.toLowerCase().includes("subscription") ||
                                 data.message.toLowerCase().includes("account login")) &&
-                                !data.message.toLowerCase().includes("xumo play");
+                                !data.message.toLowerCase().includes("service a");
 
       let assistantMessage: Message;
       
-      if (isNonXumoPlayIssue) {
-        // For non-Xumo Play issues, use our standard support message
+      if (isNonServiceAIssue) {
+        // For non-Service A issues, use our standard support message
         assistantMessage = {
           id: generateUniqueId(),
-          content: "I'm specifically trained to help with the Xumo Play app only. For questions about other streaming services or subscription issues, please visit xumo.com/support for dedicated assistance.",
+          content: "I'm specifically trained to help with Service A only. For questions about other services or subscription issues, please visit our main support page for dedicated assistance.",
           role: "assistant",
           timestamp: new Date().toLocaleTimeString(),
         };
       } else {
-        // For Xumo Play issues, use the assistant's response
+        // For Service A issues, use the assistant's response
         const messageContent = cleanMessageContent(data.message);
         
         assistantMessage = {
@@ -275,26 +275,26 @@ export function ChatWindow() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDeviceSelection("Xumo Stream Box")}
-                  className="rounded-full border-2 border-[#05B2B6] bg-gradient-to-r from-gray-50 to-white px-6 py-2 text-gray-800 shadow-md transition-all hover:scale-105 hover:shadow-lg hover:from-[#05B2B6]/10 hover:to-white"
+                  onClick={() => handleDeviceSelection("Service B")}
+                  className="rounded-full border-2 border-blue-500 bg-gradient-to-r from-gray-50 to-white px-6 py-2 text-gray-800 shadow-md transition-all hover:scale-105 hover:shadow-lg hover:from-blue-500/10 hover:to-white"
                 >
-                  Xumo Stream Box
+                  Service B
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDeviceSelection("Xumo TV")}
-                  className="rounded-full border-2 border-[#05B2B6] bg-gradient-to-r from-gray-50 to-white px-6 py-2 text-gray-800 shadow-md transition-all hover:scale-105 hover:shadow-lg hover:from-[#05B2B6]/10 hover:to-white"
+                  onClick={() => handleDeviceSelection("Service C")}
+                  className="rounded-full border-2 border-blue-500 bg-gradient-to-r from-gray-50 to-white px-6 py-2 text-gray-800 shadow-md transition-all hover:scale-105 hover:shadow-lg hover:from-blue-500/10 hover:to-white"
                 >
-                  Xumo TV
+                  Service C
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDeviceSelection("Xumo Play")}
-                  className="rounded-full border-2 border-[#05B2B6] bg-gradient-to-r from-gray-50 to-white px-6 py-2 text-gray-800 shadow-md transition-all hover:scale-105 hover:shadow-lg hover:from-[#05B2B6]/10 hover:to-white"
+                  onClick={() => handleDeviceSelection("Service A")}
+                  className="rounded-full border-2 border-blue-500 bg-gradient-to-r from-gray-50 to-white px-6 py-2 text-gray-800 shadow-md transition-all hover:scale-105 hover:shadow-lg hover:from-blue-500/10 hover:to-white"
                 >
-                  Xumo Play
+                  Service A
                 </Button>
               </div>
             )}
